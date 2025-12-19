@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Flower Classification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .reset-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .reset-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .result.success .result-title {
+            color: #28a745;
+        }
+        
+        .result.error .result-title {
+            color: #dc3545;
+        }
+        
+        .probabilities {
+            margin-top: 15px;
+        }
+        
+        .probability-bar {
+            margin: 10px 0;
+        }
+        
+        .probability-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+        
+        .example-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .example-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .example-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .example-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 Iris Flower Classification</h1>
+        <p class="subtitle">ML-powered species prediction</p>
+        
+        <form id="predictionForm">
+            <div class="form-group">
+                <label for="sepal_length">Sepal Length (cm)</label>
+                <input type="number" id="sepal_length" step="0.1" min="0" max="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sepal_width">Sepal Width (cm)</label>
+                <input type="number" id="sepal_width" step="0.1" min="0" max="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="petal_length">Petal Length (cm)</label>
+                <input type="number" id="petal_length" step="0.1" min="0" max="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="petal_width">Petal Width (cm)</label>
+                <input type="number" id="petal_width" step="0.1" min="0" max="10" required>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="predict-btn">🔮 Predict Species</button>
+                <button type="button" class="reset-btn" onclick="resetForm()">🔄 Reset</button>
+            </div>
+        </form>
+        
+        <div id="result" class="result">
+            <div class="result-title" id="resultTitle"></div>
+            <div id="resultContent"></div>
+        </div>
+        
+        <div class="example-section">
+            <div class="example-title">📝 Try Example Data:</div>
+            <div class="example-buttons">
+                <button class="example-btn" onclick="loadExample('setosa')">Setosa</button>
+                <button class="example-btn" onclick="loadExample('versicolor')">Versicolor</button>
+                <button class="example-btn" onclick="loadExample('virginica')">Virginica</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const examples = {
+            setosa: { sepal_length: 5.1, sepal_width: 3.5, petal_length: 1.4, petal_width: 0.2 },
+            versicolor: { sepal_length: 7.0, sepal_width: 3.2, petal_length: 4.7, petal_width: 1.4 },
+            virginica: { sepal_length: 6.3, sepal_width: 3.3, petal_length: 6.0, petal_width: 2.5 }
+        };
+        
+        function loadExample(species) {
+            const example = examples[species];
+            document.getElementById('sepal_length').value = example.sepal_length;
+            document.getElementById('sepal_width').value = example.sepal_width;
+            document.getElementById('petal_length').value = example.petal_length;
+            document.getElementById('petal_width').value = example.petal_width;
+        }
+        
+        function resetForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('result').classList.remove('show', 'success', 'error');
+        }
+        
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                sepal_length: parseFloat(document.getElementById('sepal_length').value),
+                sepal_width: parseFloat(document.getElementById('sepal_width').value),
+                petal_length: parseFloat(document.getElementById('petal_length').value),
+                petal_width: parseFloat(document.getElementById('petal_width').value)
+            };
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(result, true);
+                } else {
+                    showResult(result, false);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        });
+        
+        function showResult(data, success) {
+            const resultDiv = document.getElementById('result');
+            const titleDiv = document.getElementById('resultTitle');
+            const contentDiv = document.getElementById('resultContent');
+            
+            resultDiv.classList.remove('success', 'error', 'show');
+            
+            if (success) {
+                resultDiv.classList.add('success', 'show');
+                titleDiv.textContent = `Predicted Species: ${data.prediction.toUpperCase()}`;
+                
+                const probsHtml = `
+                    <div class="probabilities">
+                        <strong>Confidence Levels:</strong>
+                        ${Object.entries(data.probabilities).map(([species, prob]) => `
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span>${species}</span>
+                                    <span>${(prob * 100).toFixed(1)}%</span>
+                                </div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: ${prob * 100}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                contentDiv.innerHTML = probsHtml;
+            } else {
+                resultDiv.classList.add('error', 'show');
+                titleDiv.textContent = 'Error';
+                contentDiv.textContent = data.error || 'An error occurred';
+            }
+        }
+    </script>
+</body>
+</html>

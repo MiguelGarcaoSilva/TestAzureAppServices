@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .species {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-transform: capitalize;
+        }
+        
+        .confidence {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .input-values {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-values h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .value-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .value-row:last-child {
+            border-bottom: none;
+        }
+        
+        .label {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .value {
+            color: #333;
+        }
+        
+        .probabilities {
+            margin-bottom: 20px;
+        }
+        
+        .probabilities h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .prob-bar {
+            margin-bottom: 15px;
+        }
+        
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .prob-name {
+            text-transform: capitalize;
+            font-weight: 600;
+        }
+        
+        .prob-value {
+            color: #667eea;
+        }
+        
+        .progress {
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            transition: width 1s ease-out;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .species {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Prediction Result</h1>
+        
+        <div class="result-box">
+            <div>Predicted Species:</div>
+            <div class="species">{{ prediction }}</div>
+            <div class="confidence">Confidence: {{ "%.1f"|format(probabilities[prediction] * 100) }}%</div>
+        </div>
+        
+        <div class="input-values">
+            <h3>Input Values</h3>
+            <div class="value-row">
+                <span class="label">Sepal Length:</span>
+                <span class="value">{{ input.sepal_length }} cm</span>
+            </div>
+            <div class="value-row">
+                <span class="label">Sepal Width:</span>
+                <span class="value">{{ input.sepal_width }} cm</span>
+            </div>
+            <div class="value-row">
+                <span class="label">Petal Length:</span>
+                <span class="value">{{ input.petal_length }} cm</span>
+            </div>
+            <div class="value-row">
+                <span class="label">Petal Width:</span>
+                <span class="value">{{ input.petal_width }} cm</span>
+            </div>
+        </div>
+        
+        <div class="probabilities">
+            <h3>Probability Distribution</h3>
+            {% for species, prob in probabilities.items() %}
+            <div class="prob-bar">
+                <div class="prob-label">
+                    <span class="prob-name">{{ species }}</span>
+                    <span class="prob-value">{{ "%.1f"|format(prob * 100) }}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{ prob * 100 }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <a href="/" class="btn">Try Another Prediction</a>
+    </div>
+</body>
+</html>
