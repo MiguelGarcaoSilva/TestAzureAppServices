@@ -1,10 +1,17 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from functools import wraps
 import pickle
 import numpy as np
 import pandas as pd
 import os
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Get credentials from environment variables
+# Set these in Azure App Service Configuration > Application Settings
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'changeme')
 
 # Load the pre-trained model
 model_path = os.path.join(os.path.dirname(__file__), 'model', 'model.pkl')
@@ -15,10 +22,45 @@ with open(model_path, 'rb') as f:
 data_path = os.path.join(os.path.dirname(__file__), 'data', 'iris.csv')
 df = pd.read_csv(data_path)
 
+
+def login_required(f):
+    """Decorator to require login for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['user'] = username
+            return redirect(url_for('home'))
+        else:
+            return render_template('login.html', error='Invalid username or password')
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """Logout and clear session"""
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
+
 @app.route('/')
+@login_required
 def home():
     """Home page with web interface"""
-    return render_template('index.html')
+    return render_template('index.html', user=session.get('user'))
 
 @app.route('/api')
 def api_info():
@@ -44,6 +86,7 @@ def info():
     })
 
 @app.route('/predict', methods=['POST'])
+@login_required
 def predict():
     """Handle prediction from form or JSON"""
     try:

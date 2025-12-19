@@ -44,6 +44,44 @@
             font-size: 0.9em;
         }
         
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-badge {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .logout-btn {
+            background: none;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
@@ -213,6 +251,16 @@
 </head>
 <body>
     <div class="container">
+        <div class="header">
+            <div></div>
+            <div class="user-info">
+                {% if user %}
+                <span class="user-badge">👤 {{ user }}</span>
+                <a href="/logout" class="logout-btn">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+        
         <h1>🌸 Iris Flower Classification</h1>
         <p class="subtitle">ML-powered species prediction</p>
         
